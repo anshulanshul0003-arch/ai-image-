@@ -3,62 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My AI Assistant Studio</title>
+    <title>AI Assistant</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #13131a; color: #ffffff; display: flex; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #212121; color: #ececec; display: flex; height: 100vh; overflow: hidden; }
         
-        .sidebar { width: 280px; background-color: #1a1a24; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #2d2d3b; gap: 15px; }
-        .sidebar h2 { font-size: 1.1rem; color: #a29bfe; }
-        .upload-box { background-color: #222230; padding: 12px; border-radius: 8px; border: 1px dashed #6c5ce7; text-align: center; }
+        /* Sidebar - ChatGPT Style */
+        .sidebar { width: 260px; background-color: #171717; padding: 15px; display: flex; flex-direction: column; border-right: 1px solid #2f2f2f; gap: 12px; }
+        .sidebar h2 { font-size: 0.95rem; color: #ececec; font-weight: 600; padding: 5px; }
+        .upload-box { background-color: #212121; padding: 10px; border-radius: 6px; border: 1px dashed #424242; text-align: center; }
         .upload-box input { display: none; }
-        .upload-btn { background-color: #6c5ce7; color: white; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; display: inline-block; margin-top: 5px; }
-        .preview { max-width: 100%; height: 120px; object-fit: cover; border-radius: 5px; margin-top: 8px; display: none; }
+        .upload-btn { background-color: #2f2f2f; color: #ececec; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: inline-block; margin-top: 5px; }
+        .upload-btn:hover { background-color: #3f3f3f; }
+        .preview { max-width: 100%; height: 100px; object-fit: cover; border-radius: 4px; margin-top: 6px; display: none; }
         
-        .memory-info { font-size: 0.8rem; color: #b2bec3; background: #222230; padding: 10px; border-radius: 6px; flex: 1; overflow-y: auto; }
-        .clear-btn { background: #ff7675; color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; }
+        .memory-info { font-size: 0.75rem; color: #8e8ea0; background: #212121; padding: 8px; border-radius: 6px; flex: 1; overflow-y: auto; border: 1px solid #2f2f2f; }
+        .clear-btn { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 500; }
+        .clear-btn:hover { background: rgba(239, 68, 68, 0.1); }
 
-        .main { flex: 1; display: flex; flex-direction: column; background-color: #13131a; }
-        .chat-header { padding: 15px 20px; background-color: #1a1a24; border-bottom: 1px solid #2d2d3b; font-size: 1rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        /* Main Chat Area */
+        .main { flex: 1; display: flex; flex-direction: column; background-color: #212121; position: relative; }
+        .chat-header { padding: 12px 20px; background-color: #212121; border-bottom: 1px solid #2f2f2f; font-size: 0.95rem; font-weight: 600; color: #ececec; display: flex; justify-content: space-between; align-items: center; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; max-width: 800px; width: 100%; margin: 0 auto; }
         
-        .message { max-width: 75%; padding: 12px 16px; border-radius: 10px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; }
-        .user-msg { align-self: flex-end; background-color: #6c5ce7; color: white; }
-        .ai-msg { align-self: flex-start; background-color: #222230; color: #dfe6e9; border: 1px solid #2d2d3b; }
-        .ai-img { max-width: 100%; border-radius: 8px; margin-top: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .message-row { display: flex; width: 100%; gap: 15px; }
+        .message-row.user { justify-content: flex-end; }
+        .message-row.ai { justify-content: flex-start; }
+        
+        .message-bubble { max-width: 80%; padding: 10px 15px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; word-wrap: break-word; }
+        .user .message-bubble { background-color: #2f2f2f; color: #ececec; border-top-right-radius: 2px; }
+        .ai .message-bubble { background-color: transparent; color: #ececec; padding: 0; }
+        .ai-img { max-width: 100%; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
 
-        .input-area { padding: 15px 20px; background-color: #1a1a24; border-top: 1px solid #2d2d3b; display: flex; gap: 10px; }
-        .input-area input { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid #2d2d3b; background-color: #13131a; color: white; outline: none; font-size: 0.95rem; }
-        .input-area button { padding: 0 20px; background-color: #6c5ce7; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        /* Input Area */
+        .input-container { padding: 15px 20px; background-color: #212121; display: flex; justify-content: center; }
+        .input-wrapper { max-width: 800px; width: 100%; background-color: #2f2f2f; border-radius: 12px; display: flex; align-items: center; padding: 8px 12px; border: 1px solid #424242; }
+        .input-wrapper input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 0.95rem; padding: 6px; }
+        .input-wrapper button { background-color: #ececec; color: #212121; border: none; width: 32px; height: 32px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .input-wrapper button:hover { background-color: #ffffff; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <h2>AI Studio 🤖</h2>
+        <h2>Assistant Studio</h2>
         <div class="upload-box">
-            <span style="font-size: 0.75rem; color: #b2bec3;">Reference Photo</span><br>
-            <label for="fileInput" class="upload-btn">📁 Upload Photo</label>
+            <span style="font-size: 0.7rem; color: #8e8ea0;">Reference Photo</span><br>
+            <label for="fileInput" class="upload-btn">Upload</label>
             <input type="file" id="fileInput" accept="image/*" onchange="loadImg(event)">
             <img id="imgPrev" class="preview">
         </div>
         
-        <div style="font-size: 0.85rem; color: #a29bfe; font-weight: bold;">Memory Status:</div>
-        <div class="memory-info" id="memLog">Active and ready.</div>
-        <button class="clear-btn" onclick="resetChat()">Clear Memory</button>
+        <div style="font-size: 0.75rem; color: #ececec; font-weight: 500;">Memory Status:</div>
+        <div class="memory-info" id="memLog">Active context saved.</div>
+        <button class="clear-btn" onclick="resetChat()">Clear Conversations</button>
     </div>
 
     <div class="main">
         <div class="chat-header">
-            <span>My Personal AI Assistant</span>
-            <span style="font-size: 0.75rem; color: #00b894;">● Ready</span>
+            <span>ChatGPT Style UI</span>
+            <span style="font-size: 0.75rem; color: #10a37f;">● Ready</span>
         </div>
         
         <div class="chat-messages" id="chatBox"></div>
 
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Kuch bhi likho ya /img [scene] likh kar image banao..." onkeypress="if(event.key==='Enter') sendMsg()">
-            <button onclick="sendMsg()">Send</button>
+        <div class="input-container">
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="Message or type /img [prompt]..." onkeypress="if(event.key==='Enter') sendMsg()">
+                <button onclick="sendMsg()">→</button>
+            </div>
         </div>
     </div>
 
@@ -74,7 +87,7 @@
                 reader.onload = function(val) {
                     document.getElementById('imgPrev').src = val.target.result;
                     document.getElementById('imgPrev').style.display = 'block';
-                    appendUI("Photo upload ho gayi hai! Ab aap jo bhi scene prompt denge, waisi hi high-quality image ban jayegi.", false);
+                    appendUI("Reference photo upload ho gayi hai. Ab aap jo bhi poochhenge ya /img likhenge, usme yeh dhyan rakha jayega.", false);
                 };
                 reader.readAsDataURL(file);
             }
@@ -82,28 +95,33 @@
 
         function appendUI(text, isUser, isHtml = false) {
             const box = document.getElementById('chatBox');
-            const div = document.createElement('div');
-            div.className = `message ${isUser ? 'user-msg' : 'ai-msg'}`;
+            const row = document.createElement('div');
+            row.className = `message-row ${isUser ? 'user' : 'ai'}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
             if(isHtml) {
-                div.innerHTML = text;
+                bubble.innerHTML = text;
             } else {
-                div.innerText = text;
+                bubble.innerText = text;
             }
-            box.appendChild(div);
+            
+            row.appendChild(bubble);
+            box.appendChild(row);
             box.scrollTop = box.scrollHeight;
         }
 
         function saveChat(text, isUser, isHtml = false) {
-            let history = JSON.parse(localStorage.getItem('my_ai_history') || '[]');
+            let history = JSON.parse(localStorage.getItem('chat_v2') || '[]');
             history.push({ text, isUser, isHtml });
-            localStorage.setItem('my_ai_history', JSON.stringify(history));
+            localStorage.setItem('chat_v2', JSON.stringify(history));
             updateMemBox();
         }
 
         function loadSavedChat() {
-            let history = JSON.parse(localStorage.getItem('my_ai_history') || '[]');
+            let history = JSON.parse(localStorage.getItem('chat_v2') || '[]');
             if(history.length === 0) {
-                appendUI("Hello! Main tera personal assistant hoon. Bata kya help chahiye ya /img [prompt] likh kar cinematic photo bana.", false);
+                appendUI("Hello! Main aapka personal assistant hoon. Normal baat karne ke liye message bhejo, aur cinematic image ke liye <b>/img [prompt]</b> likho.", false);
             } else {
                 history.forEach(item => appendUI(item.text, item.isUser, item.isHtml));
             }
@@ -111,14 +129,14 @@
         }
 
         function updateMemBox() {
-            let history = JSON.parse(localStorage.getItem('my_ai_history') || '[]');
-            document.getElementById('memLog').innerText = `Saved messages: ${history.length}. Context saved.`;
+            let history = JSON.parse(localStorage.getItem('chat_v2') || '[]');
+            document.getElementById('memLog').innerText = `Saved messages: ${history.length}. Context is secure.`;
         }
 
         function resetChat() {
-            localStorage.removeItem('my_ai_history');
+            localStorage.removeItem('chat_v2');
             document.getElementById('chatBox').innerHTML = '';
-            appendUI("Memory clear ho chuki hai.", false);
+            appendUI("New chat started.", false);
             updateMemBox();
         }
 
@@ -131,35 +149,55 @@
             saveChat(text, true, false);
             input.value = "";
 
-            // Agar user ne /img se shuru kiya ya koi bhi scene description di
-            let promptText = text;
             if(text.startsWith('/img ')) {
-                promptText = text.replace('/img ', '').trim();
+                const prompt = text.replace('/img ', '').trim();
+                const loadRow = document.createElement('div');
+                loadRow.className = 'message-row ai';
+                loadRow.innerHTML = '<div class="message-bubble">Generating cinematic image... ⏳</div>';
+                document.getElementById('chatBox').appendChild(loadRow);
+
+                const seed = Math.floor(Math.random() * 999999);
+                const qualityTags = "hyper-realistic portrait, cinematic soft lighting, detailed facial features, 8k resolution, photorealistic masterpiece, dramatic depth of field, high-end drama film still";
+                const fullPrompt = encodeURIComponent(`${prompt}, ${qualityTags}`);
+                
+                const imgUrl = `https://pollinations.ai/p/${fullPrompt}?width=1000&height=1500&seed=${seed}&model=flux&nologo=true`;
+
+                const testImg = new Image();
+                testImg.src = imgUrl;
+                testImg.onload = function() {
+                    loadRow.remove();
+                    const htmlContent = `📸 <b>Generated Image:</b><br><img src="${imgUrl}" class="ai-img">`;
+                    appendUI(htmlContent, false, true);
+                    saveChat(htmlContent, false, true);
+                };
+                testImg.onerror = function() {
+                    loadRow.remove();
+                    appendUI("Image generation mein error aaya. Dubara try karein.", false);
+                };
+            } else {
+                const loadRow = document.createElement('div');
+                loadRow.className = 'message-row ai';
+                loadRow.innerHTML = '<div class="message-bubble">Thinking...</div>';
+                document.getElementById('chatBox').appendChild(loadRow);
+
+                try {
+                    const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent("You are a smart, concise personal AI assistant. Reply naturally and briefly in Hinglish. User says: " + text)}`);
+                    let reply = await res.text();
+                    
+                    if(reply.includes('|') || reply.length > 300) {
+                        reply = "Haan bhai, batao aage kya karna hai?";
+                    }
+
+                    loadRow.remove();
+                    appendUI(reply, false);
+                    saveChat(reply, false, false);
+                } catch(e) {
+                    loadRow.remove();
+                    const fallback = "Haan bhai, sun raha hoon! Batao aage kya plan hai?";
+                    appendUI(fallback, false);
+                    saveChat(fallback, false, false);
+                }
             }
-
-            const loadId = document.createElement('div');
-            loadId.className = 'message ai-msg';
-            loadId.innerText = 'Creating ultra-realistic cinematic image... ⏳';
-            document.getElementById('chatBox').appendChild(loadId);
-
-            const seed = Math.floor(Math.random() * 999999);
-            const qualityTags = "hyper-realistic portrait, cinematic soft lighting, detailed facial features, 8k resolution, photorealistic masterpiece, dramatic depth of field, high-end drama film still";
-            const fullPrompt = encodeURIComponent(`${promptText}, ${qualityTags}`);
-            
-            const imgUrl = `https://pollinations.ai/p/${fullPrompt}?width=1000&height=1500&seed=${seed}&model=flux&nologo=true`;
-
-            const testImg = new Image();
-            testImg.src = imgUrl;
-            testImg.onload = function() {
-                loadId.remove();
-                const htmlContent = `📸 <b>Generated Scene:</b><br><img src="${imgUrl}" class="ai-img">`;
-                appendUI(htmlContent, false, true);
-                saveChat(htmlContent, false, true);
-            };
-            testImg.onerror = function() {
-                loadId.remove();
-                appendUI("Image generation mein error aaya. Dubara try karein.", false);
-            };
         }
     </script>
 </body>
