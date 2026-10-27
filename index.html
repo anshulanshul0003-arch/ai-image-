@@ -3,197 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Personal AI - Chat & Image Generator</title>
+    <title>My Drama AI Studio 🎭</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #12121c; color: #ffffff; display: flex; height: 100vh; overflow: hidden; }
+        
+        .sidebar { width: 300px; background-color: #1a1a28; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #2d2d42; gap: 15px; }
+        .sidebar h2 { font-size: 1.2rem; color: #6c5ce7; }
+        
+        .upload-section { background-color: #252538; padding: 15px; border-radius: 8px; border: 1px dashed #6c5ce7; text-align: center; }
+        .upload-section input { display: none; }
+        .upload-btn { background-color: #6c5ce7; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: inline-block; font-size: 0.9rem; margin-top: 8px; }
+        .preview-img { max-width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-top: 10px; display: none; }
 
-        body {
-            background-color: #1e1e2f;
-            color: #ffffff;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
+        .main-content { flex: 1; display: flex; flex-direction: column; }
+        .chat-header { padding: 20px; background-color: #181828; border-bottom: 1px solid #2d2d42; font-size: 1.1rem; font-weight: bold; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 12px; line-height: 1.4; }
+        .user-message { align-self: flex-end; background-color: #6c5ce7; color: white; }
+        .ai-message { align-self: flex-start; background-color: #252538; color: #e1e1e1; }
+        .ai-image { max-width: 100%; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
 
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
-            background-color: #141423;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #2d2d42;
-        }
-
-        .sidebar h2 {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            color: #6c5ce7;
-        }
-
-        .new-chat-btn {
-            background-color: #6c5ce7;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-bottom: 20px;
-            transition: 0.3s;
-        }
-
-        .new-chat-btn:hover {
-            background-color: #5a4bcf;
-        }
-
-        /* Main Chat Area */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-header {
-            padding: 20px;
-            background-color: #181828;
-            border-bottom: 1px solid #2d2d42;
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .message {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            line-height: 1.4;
-        }
-
-        .user-message {
-            align-self: flex-end;
-            background-color: #6c5ce7;
-            color: white;
-            border-bottom-right-radius: 2px;
-        }
-
-        .ai-message {
-            align-self: flex-start;
-            background-color: #2b2b40;
-            color: #e1e1e1;
-            border-bottom-left-radius: 2px;
-        }
-
-        .ai-image {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Input Box */
-        .input-container {
-            padding: 20px;
-            background-color: #181828;
-            border-top: 1px solid #2d2d42;
-            display: flex;
-            gap: 10px;
-        }
-
-        .input-container input {
-            flex: 1;
-            padding: 12px 16px;
-            border-radius: 8px;
-            border: 1px solid #3d3d5c;
-            background-color: #252538;
-            color: white;
-            outline: none;
-        }
-
-        .input-container input:focus {
-            border-color: #6c5ce7;
-        }
-
-        .input-container button {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            background-color: #6c5ce7;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .input-container button:hover {
-            background-color: #5a4bcf;
-        }
-
-        .loading {
-            font-style: italic;
-            color: #a0a0b0;
-        }
+        .input-container { padding: 20px; background-color: #181828; border-top: 1px solid #2d2d42; display: flex; gap: 10px; }
+        .input-container input { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid #3d3d5c; background-color: #252538; color: white; outline: none; }
+        .input-container button { padding: 12px 20px; border: none; border-radius: 8px; background-color: #6c5ce7; color: white; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar -->
+    <!-- Sidebar with Photo Upload -->
     <div class="sidebar">
-        <h2>My AI Studio 🚀</h2>
-        <button class="new-chat-btn" onclick="clearChat()">Clear Chat</button>
-        <p style="font-size: 0.85rem; color: #888;">Type <b>/img [your prompt]</b> to generate unlimited free images!</p>
+        <h2>Drama AI Studio 🎭</h2>
+        <p style="font-size: 0.85rem; color: #aaa;">Reference Face Photo Upload Karein (Ryu / Hana):</p>
+        
+        <div class="upload-section">
+            <span style="font-size: 0.8rem; color: #ccc;">Select Character Photo</span><br>
+            <label for="imageUpload" class="upload-btn">📁 Upload Photo</label>
+            <input type="file" id="imageUpload" accept="image/*" onchange="previewFile()">
+            <img id="imgPreview" class="preview-img" alt="Uploaded Reference">
+        </div>
+
+        <button style="background:#d63031; color:white; padding:8px; border:none; border-radius:6px; cursor:pointer;" onclick="clearReference()">Remove Uploaded Photo</button>
     </div>
 
     <!-- Main Content -->
     <div class="main-content">
-        <div class="chat-header">ChatGPT & Image Studio</div>
+        <div class="chat-header">"My Boss, My Secret" Scene Generator</div>
         
         <div class="chat-messages" id="chatBox">
             <div class="message ai-message">
-                Hello! Main aapka AI assistant hoon. <br><br>
-                • Normal baat karne ke liye message type karein.<br>
-                • Image banane ke liye <b>/img</b> likhein. <br><i>Example: /img A handsome CEO in black suit standing in a modern office, 8k cinematic</i>
+                Welcome! <br>
+                1. Side mein Ryu ya Hana ki reference photo upload karein.<br>
+                2. Prompt daalein: <b>/img [scene description]</b><br>
+                <i>Example: /img Ryu sitting in his modern office, realistic shot, 8k</i>
             </div>
         </div>
 
         <div class="input-container">
-            <input type="text" id="userInput" placeholder="Type a message or /img prompt..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()">Send</button>
+            <input type="text" id="userInput" placeholder="Type /img [scene description]..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Generate</button>
         </div>
     </div>
 
     <script>
-        function handleKeyPress(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
+        let uploadedImageUrl = "";
+
+        function previewFile() {
+            const file = document.getElementById('imageUpload').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    document.getElementById('imgPreview').src = reader.result;
+                    document.getElementById('imgPreview').style.display = 'block';
+                    uploadedImageUrl = reader.result;
+                }
+                reader.readAsDataURL(file);
             }
         }
+
+        function clearReference() {
+            document.getElementById('imageUpload').value = "";
+            document.getElementById('imgPreview').style.display = 'none';
+            uploadedImageUrl = "";
+        }
+
+        function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
 
         function appendMessage(text, isUser, isImage = false) {
             const chatBox = document.getElementById('chatBox');
             const msgDiv = document.createElement('div');
-            msgDiv.classList.add('message');
-            msgDiv.classList.add(isUser ? 'user-message' : 'ai-message');
-
-            if (isImage) {
-                msgDiv.innerHTML = text;
-            } else {
-                msgDiv.innerText = text;
-            }
-
+            msgDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            msgDiv.innerHTML = isImage ? text : text;
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -206,43 +107,30 @@
             appendMessage(text, true);
             input.value = '';
 
-            // Check if user wants an image
             if (text.startsWith('/img ')) {
                 const prompt = text.replace('/img ', '').trim();
-                const loadingMsgDiv = document.createElement('div');
-                loadingMsgDiv.classList.add('message', 'ai-message', 'loading');
-                loadingMsgDiv.innerText = 'Generating your AI image... Please wait... 🎨';
-                document.getElementById('chatBox').appendChild(loadingMsgDiv);
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'message ai-message';
+                loadingDiv.innerText = 'Generating drama scene... Please wait ⏳';
+                document.getElementById('chatBox').appendChild(loadingDiv);
 
-                // Using Pollinations AI Free Unlimited Image Engine
-                const encodedPrompt = encodeURIComponent(prompt);
                 const randomSeed = Math.floor(Math.random() * 100000);
-                const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1080&height=1920&seed=${randomSeed}&model=flux`;
+                const encodedPrompt = encodeURIComponent(prompt + ", ultra realistic, cinematic lighting, photorealistic, 8k");
+                
+                // Image URL with flux model
+                let imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1080&height=1920&seed=${randomSeed}&model=flux`;
 
                 const img = new Image();
                 img.src = imageUrl;
                 img.onload = () => {
-                    loadingMsgDiv.remove();
-                    appendMessage(`<p>Here is your AI generated image:</p><img src="${imageUrl}" class="ai-image" alt="Generated Image">`, false, true);
+                    loadingDiv.remove();
+                    appendMessage(`<p>🎬 Generated Scene:</p><img src="${imageUrl}" class="ai-image">`, false, true);
                 };
                 img.onerror = () => {
-                    loadingMsgDiv.remove();
-                    appendMessage('Failed to generate image. Please try again.', false);
+                    loadingDiv.remove();
+                    appendMessage('Generation failed. Please try again.', false);
                 };
-            } else {
-                // Dummy Chatbot Response (Can be integrated with free Hugging Face API / OpenRouter)
-                setTimeout(() => {
-                    appendMessage("Main aapki help kar sakta hoon! Agar aapko image generate karni hai toh `/img [prompt]` ka use karein.", false);
-                }, 500);
             }
-        }
-
-        function clearChat() {
-            document.getElementById('chatBox').innerHTML = `
-                <div class="message ai-message">
-                    Chat cleared! Type <b>/img [prompt]</b> to generate unlimited images.
-                </div>
-            `;
         }
     </script>
 </body>
