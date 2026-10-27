@@ -22,7 +22,7 @@
         .chat-header { padding: 15px 20px; background-color: #1a1a24; border-bottom: 1px solid #2d2d3b; font-size: 1rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         
-        .message { max-width: 75%; padding: 10px 14px; border-radius: 10px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; }
+        .message { max-width: 75%; padding: 12px 16px; border-radius: 10px; font-size: 0.95rem; line-height: 1.4; word-wrap: break-word; }
         .user-msg { align-self: flex-end; background-color: #6c5ce7; color: white; }
         .ai-msg { align-self: flex-start; background-color: #222230; color: #dfe6e9; border: 1px solid #2d2d3b; }
         .ai-img { max-width: 100%; border-radius: 8px; margin-top: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
@@ -35,9 +35,9 @@
 <body>
 
     <div class="sidebar">
-        <h2>AI Assistant 🤖</h2>
+        <h2>AI Studio 🤖</h2>
         <div class="upload-box">
-            <span style="font-size: 0.75rem; color: #b2bec3;">Reference Image</span><br>
+            <span style="font-size: 0.75rem; color: #b2bec3;">Reference Photo</span><br>
             <label for="fileInput" class="upload-btn">📁 Upload Photo</label>
             <input type="file" id="fileInput" accept="image/*" onchange="loadImg(event)">
             <img id="imgPrev" class="preview">
@@ -50,21 +50,19 @@
 
     <div class="main">
         <div class="chat-header">
-            <span>ChatGPT Style Assistant</span>
+            <span>My Personal AI Assistant</span>
             <span style="font-size: 0.75rem; color: #00b894;">● Ready</span>
         </div>
         
         <div class="chat-messages" id="chatBox"></div>
 
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="Type message or /img [scene description]..." onkeypress="if(event.key==='Enter') sendMsg()">
+            <input type="text" id="userInput" placeholder="Kuch bhi likho ya /img [scene] likh kar image banao..." onkeypress="if(event.key==='Enter') sendMsg()">
             <button onclick="sendMsg()">Send</button>
         </div>
     </div>
 
     <script>
-        let hasReferenceImage = false;
-
         window.onload = function() {
             loadSavedChat();
         };
@@ -76,8 +74,7 @@
                 reader.onload = function(val) {
                     document.getElementById('imgPrev').src = val.target.result;
                     document.getElementById('imgPrev').style.display = 'block';
-                    hasReferenceImage = true;
-                    appendUI("Reference photo uploaded successfully! Ab aap jo bhi /img prompt likhenge, yeh photo style usme consider ki jayegi.", false);
+                    appendUI("Photo upload ho gayi hai! Ab aap jo bhi scene prompt denge, waisi hi high-quality image ban jayegi.", false);
                 };
                 reader.readAsDataURL(file);
             }
@@ -106,7 +103,7 @@
         function loadSavedChat() {
             let history = JSON.parse(localStorage.getItem('my_ai_history') || '[]');
             if(history.length === 0) {
-                appendUI("Hello! Main tera personal AI assistant hoon. Bata kya help chahiye?", false);
+                appendUI("Hello! Main tera personal assistant hoon. Bata kya help chahiye ya /img [prompt] likh kar cinematic photo bana.", false);
             } else {
                 history.forEach(item => appendUI(item.text, item.isUser, item.isHtml));
             }
@@ -134,57 +131,35 @@
             saveChat(text, true, false);
             input.value = "";
 
+            // Agar user ne /img se shuru kiya ya koi bhi scene description di
+            let promptText = text;
             if(text.startsWith('/img ')) {
-                const prompt = text.replace('/img ', '').trim();
-                const loadId = document.createElement('div');
-                loadId.className = 'message ai-msg';
-                loadId.innerText = 'Generating cinematic ultra-realistic image... ⏳';
-                document.getElementById('chatBox').appendChild(loadId);
-
-                const seed = Math.floor(Math.random() * 999999);
-                // Ultra realistic cinematic style matching user reference quality
-                const qualityTags = "masterpiece, ultra-realistic photorealistic portrait, detailed facial features, cinematic soft lighting, soft depth of field, 8k resolution, drama film still";
-                const fullPrompt = encodeURIComponent(`${prompt}, ${qualityTags}`);
-                
-                const imgUrl = `https://pollinations.ai/p/${fullPrompt}?width=1000&height=1500&seed=${seed}&model=flux&nologo=true`;
-
-                const testImg = new Image();
-                testImg.src = imgUrl;
-                testImg.onload = function() {
-                    loadId.remove();
-                    const htmlContent = `📸 <b>Generated High-Quality Image:</b><br><img src="${imgUrl}" class="ai-img">`;
-                    appendUI(htmlContent, false, true);
-                    saveChat(htmlContent, false, true);
-                };
-                testImg.onerror = function() {
-                    loadId.remove();
-                    appendUI("Image generation mein error aaya. Dobara try karein.", false);
-                };
-            } else {
-                const loadId = document.createElement('div');
-                loadId.className = 'message ai-msg';
-                loadId.innerText = 'Typing...';
-                document.getElementById('chatBox').appendChild(loadId);
-
-                try {
-                    const systemContext = "You are a friendly personal AI assistant. Reply short, crisp, and naturally in Hinglish. Never generate markdown tables or code lists.";
-                    const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(systemContext + " User: " + text)}`);
-                    let reply = await res.text();
-                    
-                    if(reply.includes('|') || reply.includes('Table')) {
-                        reply = "Haan bhai, batao aage kya karna hai?";
-                    }
-
-                    loadId.remove();
-                    appendUI(reply, false);
-                    saveChat(reply, false, false);
-                } catch(e) {
-                    loadId.remove();
-                    const fallback = "Haan sun raha hoon, batao!";
-                    appendUI(fallback, false);
-                    saveChat(fallback, false, false);
-                }
+                promptText = text.replace('/img ', '').trim();
             }
+
+            const loadId = document.createElement('div');
+            loadId.className = 'message ai-msg';
+            loadId.innerText = 'Creating ultra-realistic cinematic image... ⏳';
+            document.getElementById('chatBox').appendChild(loadId);
+
+            const seed = Math.floor(Math.random() * 999999);
+            const qualityTags = "hyper-realistic portrait, cinematic soft lighting, detailed facial features, 8k resolution, photorealistic masterpiece, dramatic depth of field, high-end drama film still";
+            const fullPrompt = encodeURIComponent(`${promptText}, ${qualityTags}`);
+            
+            const imgUrl = `https://pollinations.ai/p/${fullPrompt}?width=1000&height=1500&seed=${seed}&model=flux&nologo=true`;
+
+            const testImg = new Image();
+            testImg.src = imgUrl;
+            testImg.onload = function() {
+                loadId.remove();
+                const htmlContent = `📸 <b>Generated Scene:</b><br><img src="${imgUrl}" class="ai-img">`;
+                appendUI(htmlContent, false, true);
+                saveChat(htmlContent, false, true);
+            };
+            testImg.onerror = function() {
+                loadId.remove();
+                appendUI("Image generation mein error aaya. Dubara try karein.", false);
+            };
         }
     </script>
 </body>
