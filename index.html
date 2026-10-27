@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Studio</title>
+    <title>AI Story & Image Studio</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #12121c; color: #ffffff; display: flex; height: 100vh; overflow: hidden; }
         
-        .sidebar { width: 300px; background-color: #1a1a28; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #2d2d42; gap: 15px; }
+        .sidebar { width: 320px; background-color: #1a1a28; padding: 20px; display: flex; flex-direction: column; border-right: 1px solid #2d2d42; gap: 15px; }
         .sidebar h2 { font-size: 1.2rem; color: #6c5ce7; }
         
         .upload-section { background-color: #252538; padding: 15px; border-radius: 8px; border: 1px dashed #6c5ce7; text-align: center; }
         .upload-section input { display: none; }
         .upload-btn { background-color: #6c5ce7; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; display: inline-block; font-size: 0.9rem; margin-top: 8px; }
-        .preview-img { max-width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-top: 10px; display: none; }
+        .preview-img { max-width: 100%; height: 140px; object-fit: cover; border-radius: 6px; margin-top: 10px; display: none; }
+        .file-name { font-size: 0.8rem; color: #a29bfe; margin-top: 5px; word-break: break-all; }
+
+        .memory-box { background-color: #252538; padding: 10px; border-radius: 8px; font-size: 0.85rem; color: #bbb; max-height: 150px; overflow-y: auto; }
 
         .main-content { flex: 1; display: flex; flex-direction: column; }
-        .chat-header { padding: 20px; background-color: #181828; border-bottom: 1px solid #2d2d42; font-size: 1.1rem; font-weight: bold; }
+        .chat-header { padding: 15px 20px; background-color: #181828; border-bottom: 1px solid #2d2d42; font-size: 1.1rem; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
         
-        .message { max-width: 80%; padding: 12px 16px; border-radius: 12px; line-height: 1.4; }
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 12px; line-height: 1.4; word-wrap: break-word; }
         .user-message { align-self: flex-end; background-color: #6c5ce7; color: white; }
         .ai-message { align-self: flex-start; background-color: #252538; color: #e1e1e1; }
         .ai-image { max-width: 100%; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
@@ -28,50 +31,65 @@
         .input-container { padding: 20px; background-color: #181828; border-top: 1px solid #2d2d42; display: flex; gap: 10px; }
         .input-container input { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid #3d3d5c; background-color: #252538; color: white; outline: none; }
         .input-container button { padding: 12px 20px; border: none; border-radius: 8px; background-color: #6c5ce7; color: white; font-weight: bold; cursor: pointer; }
+        
+        .clear-btn { background: #d63031; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <h2>AI Studio 🚀</h2>
-        <p style="font-size: 0.85rem; color: #aaa;">Reference Image Upload:</p>
+        <p style="font-size: 0.85rem; color: #aaa;">Character Reference Image:</p>
         
         <div class="upload-section">
-            <span style="font-size: 0.8rem; color: #ccc;">Select Image</span><br>
+            <span style="font-size: 0.8rem; color: #ccc;">Select Character Photo</span><br>
             <label for="imageUpload" class="upload-btn">📁 Upload Photo</label>
             <input type="file" id="imageUpload" accept="image/*" onchange="previewFile()">
+            <div id="fileName" class="file-name"></div>
             <img id="imgPreview" class="preview-img" alt="Uploaded Reference">
         </div>
 
-        <button style="background:#d63031; color:white; padding:8px; border:none; border-radius:6px; cursor:pointer;" onclick="clearReference()">Remove Image</button>
+        <button class="clear-btn" onclick="clearReference()">Remove Photo</button>
+
+        <hr style="border: 0.5px solid #2d2d42; margin: 5px 0;">
+        <p style="font-size: 0.85rem; color: #aaa;">Saved Story Memory (Auto):</p>
+        <div class="memory-box" id="memoryDisplay">Memory initialized. Type prompts to save history.</div>
+        <button class="clear-btn" style="background:#555;" onclick="clearHistory()">Clear Saved History</button>
     </div>
 
     <div class="main-content">
-        <div class="chat-header">AI Chat & Image Generator</div>
-        
-        <div class="chat-messages" id="chatBox">
-            <div class="message ai-message">
-                Ready! Type <b>/img [your prompt]</b> to generate images.
-            </div>
+        <div class="chat-header">
+            <span>AI Story & High-Quality Image Generator</span>
+            <span style="font-size: 0.8rem; color: #2ed573;">● Memory Active</span>
         </div>
+        
+        <div class="chat-messages" id="chatBox"></div>
 
         <div class="input-container">
-            <input type="text" id="userInput" placeholder="Type /img [prompt]..." onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()">Generate</button>
+            <input type="text" id="userInput" placeholder="Type /img [scene prompt] or chat..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
         </div>
     </div>
 
     <script>
         let uploadedImageUrl = "";
 
+        // Load Memory & History on Startup
+        window.onload = function() {
+            loadHistory();
+        };
+
         function previewFile() {
-            const file = document.getElementById('imageUpload').files0;
+            const fileInput = document.getElementById('imageUpload');
+            const file = fileInput.files[0];
             if (file) {
+                document.getElementById('fileName').innerText = file.name;
                 const reader = new FileReader();
                 reader.onloadend = function() {
                     document.getElementById('imgPreview').src = reader.result;
                     document.getElementById('imgPreview').style.display = 'block';
                     uploadedImageUrl = reader.result;
+                    saveToMemory('Reference character photo loaded.');
                 }
                 reader.readAsDataURL(file);
             }
@@ -79,19 +97,64 @@
 
         function clearReference() {
             document.getElementById('imageUpload').value = "";
+            document.getElementById('fileName').innerText = "";
             document.getElementById('imgPreview').style.display = 'none';
             uploadedImageUrl = "";
         }
 
         function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
 
-        function appendMessage(text, isUser, isImage = false) {
+        function appendMessage(text, isUser, save = true) {
             const chatBox = document.getElementById('chatBox');
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
             msgDiv.innerHTML = text;
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
+
+            if (save) {
+                saveHistoryToStorage(text, isUser);
+            }
+        }
+
+        function saveHistoryToStorage(text, isUser) {
+            let history = JSON.parse(localStorage.getItem('chat_history') || '[]');
+            history.push({ text, isUser });
+            localStorage.setItem('chat_history', JSON.stringify(history));
+            updateMemoryDisplay();
+        }
+
+        function loadHistory() {
+            let history = JSON.parse(localStorage.getItem('chat_history') || '[]');
+            if (history.length === 0) {
+                appendMessage("Ready! Type <b>/img [prompt]</b> for ultra-realistic photos, or talk to me about your story.", false, false);
+            } else {
+                history.forEach(item => appendMessage(item.text, item.isUser, false));
+            }
+            updateMemoryDisplay();
+        }
+
+        function updateMemoryDisplay() {
+            let history = JSON.parse(localStorage.getItem('chat_history') || '[]');
+            const memoryDisplay = document.getElementById('memoryDisplay');
+            if (history.length === 0) {
+                memoryDisplay.innerText = "No saved memory.";
+            } else {
+                memoryDisplay.innerText = `Saved ${history.length} interaction logs. All story context is preserved!`;
+            }
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('chat_history');
+            document.getElementById('chatBox').innerHTML = '';
+            appendMessage("Memory cleared. Ready for new story!", false, false);
+            updateMemoryDisplay();
+        }
+
+        function saveToMemory(info) {
+            let logs = JSON.parse(localStorage.getItem('story_notes') || '[]');
+            logs.push(info);
+            localStorage.setItem('story_notes', JSON.stringify(logs));
         }
 
         async function sendMessage() {
@@ -106,23 +169,33 @@
                 const prompt = text.replace('/img ', '').trim();
                 const loadingDiv = document.createElement('div');
                 loadingDiv.className = 'message ai-message';
-                loadingDiv.innerText = 'Generating image... Please wait ⏳';
+                loadingDiv.innerText = 'Creating ultra-realistic image... ⏳';
                 document.getElementById('chatBox').appendChild(loadingDiv);
 
-                const randomSeed = Math.floor(Math.random() * 100000);
-                const encodedPrompt = encodeURIComponent(prompt + ", ultra realistic, cinematic lighting, 8k");
-                const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1080&height=1920&seed=${randomSeed}&model=flux`;
+                const randomSeed = Math.floor(Math.random() * 1000000);
+                
+                // Photorealistic Enhancers matching user image quality
+                const qualityPrompts = "ultra realistic portrait, masterpiece, highly detailed face, natural skin texture, cinematic lighting, 8k resolution, photorealistic, soft depth of field";
+                const finalPrompt = encodeURIComponent(`${prompt}, ${qualityPrompts}`);
+                
+                // Advanced Flux Model URL
+                const imageUrl = `https://pollinations.ai/p/${finalPrompt}?width=1080&height=1920&seed=${randomSeed}&model=flux&nologo=true`;
 
                 const img = new Image();
                 img.src = imageUrl;
                 img.onload = () => {
                     loadingDiv.remove();
-                    appendMessage(`<p>Generated Image:</p><img src="${imageUrl}" class="ai-image">`, false, true);
+                    appendMessage(`<p>📸 <b>Ultra Realistic Output:</b></p><img src="${imageUrl}" class="ai-image">`, false);
                 };
                 img.onerror = () => {
                     loadingDiv.remove();
-                    appendMessage('Generation failed. Try again.', false);
+                    appendMessage('Image generation failed. Please try again.', false);
                 };
+            } else {
+                // Simple AI reply for story notes
+                setTimeout(() => {
+                    appendMessage(`Story note remembered: "${text}". Ready for next scene prompt!`, false);
+                }, 500);
             }
         }
     </script>
