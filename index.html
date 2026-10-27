@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Assistant</title>
+    <title>AI Assistant Studio</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: #212121; color: #ececec; display: flex; height: 100vh; overflow: hidden; }
@@ -80,7 +80,7 @@
                 const reader = new FileReader();
                 reader.onload = function(val) {
                     document.getElementById('imgPrev').src = val.target.result;
-                    document.getElementById('imgPrev'].style.display = 'block';
+                    document.getElementById('imgPrev').style.display = 'block';
                     appendUI("Reference photo upload ho gayi hai. Ab aap jo bhi /img likhenge, usme yeh dhyan rakha jayega.", false);
                 };
                 reader.readAsDataURL(file);
@@ -89,6 +89,7 @@
 
         function appendUI(text, isUser, isHtml = false) {
             const box = document.getElementById('chatBox');
+            if(!box) return;
             const row = document.createElement('div');
             row.className = `message-row ${isUser ? 'user' : 'ai'}`;
             
@@ -106,16 +107,16 @@
         }
 
         function saveChat(text, isUser, isHtml = false) {
-            let history = JSON.parse(localStorage.getItem('chat_v3') || '[]');
+            let history = JSON.parse(localStorage.getItem('chat_v4') || '[]');
             history.push({ text, isUser, isHtml });
-            localStorage.setItem('chat_v3', JSON.stringify(history));
+            localStorage.setItem('chat_v4', JSON.stringify(history));
             updateMemBox();
         }
 
         function loadSavedChat() {
-            let history = JSON.parse(localStorage.getItem('chat_v3') || '[]');
+            let history = JSON.parse(localStorage.getItem('chat_v4') || '[]');
             if(history.length === 0) {
-                appendUI("Hello! Main aapka personal assistant hoon. Normal baat karne ke liye message bhejo, aur cinematic image ke liye <b>/img [prompt]</b> likho.", false);
+                appendUI("Hello! Main aapka personal assistant hoon. Normal baat karne ke liye message bhejo, aur unlimited cinematic image ke liye <b>/img [prompt]</b> likho.", false);
             } else {
                 history.forEach(item => appendUI(item.text, item.isUser, item.isHtml));
             }
@@ -123,12 +124,15 @@
         }
 
         function updateMemBox() {
-            let history = JSON.parse(localStorage.getItem('chat_v3') || '[]');
-            document.getElementById('memLog').innerText = `Saved messages: ${history.length}. Context is secure.`;
+            let history = JSON.parse(localStorage.getItem('chat_v4') || '[]');
+            const memLog = document.getElementById('memLog');
+            if(memLog) {
+                memLog.innerText = `Saved messages: ${history.length}. Context is secure.`;
+            }
         }
 
         function resetChat() {
-            localStorage.removeItem('chat_v3');
+            localStorage.removeItem('chat_v4');
             document.getElementById('chatBox').innerHTML = '';
             appendUI("New chat started.", false);
             updateMemBox();
@@ -136,6 +140,7 @@
 
         async function sendMsg() {
             const input = document.getElementById('userInput');
+            if(!input) return;
             const text = input.value.trim();
             if(!text) return;
 
@@ -169,8 +174,7 @@
                     appendUI("Image generation mein error aaya. Dubara try karein.", false);
                 };
             } else {
-                // Direct local response taaki koi ajeeb error ya text na aaye
-                const reply = `Maine tumhari baat note kar li hai: "${text}". Batao, iske aage kya scene banana hai ya /img likh kar photo generate karein?`;
+                const reply = `Haan bhai, main sun raha hoon! Tune kaha: "${text}". Batao aage kya karna hai?`;
                 appendUI(reply, false);
                 saveChat(reply, false, false);
             }
