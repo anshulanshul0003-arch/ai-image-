@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Drama AI Studio 🎭</title>
+    <title>AI Studio</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #12121c; color: #ffffff; display: flex; height: 100vh; overflow: hidden; }
@@ -32,36 +32,31 @@
 </head>
 <body>
 
-    <!-- Sidebar with Photo Upload -->
     <div class="sidebar">
-        <h2>Drama AI Studio 🎭</h2>
-        <p style="font-size: 0.85rem; color: #aaa;">Reference Face Photo Upload Karein (Ryu / Hana):</p>
+        <h2>AI Studio 🚀</h2>
+        <p style="font-size: 0.85rem; color: #aaa;">Reference Image Upload:</p>
         
         <div class="upload-section">
-            <span style="font-size: 0.8rem; color: #ccc;">Select Character Photo</span><br>
+            <span style="font-size: 0.8rem; color: #ccc;">Select Image</span><br>
             <label for="imageUpload" class="upload-btn">📁 Upload Photo</label>
             <input type="file" id="imageUpload" accept="image/*" onchange="previewFile()">
             <img id="imgPreview" class="preview-img" alt="Uploaded Reference">
         </div>
 
-        <button style="background:#d63031; color:white; padding:8px; border:none; border-radius:6px; cursor:pointer;" onclick="clearReference()">Remove Uploaded Photo</button>
+        <button style="background:#d63031; color:white; padding:8px; border:none; border-radius:6px; cursor:pointer;" onclick="clearReference()">Remove Image</button>
     </div>
 
-    <!-- Main Content -->
     <div class="main-content">
-        <div class="chat-header">"My Boss, My Secret" Scene Generator</div>
+        <div class="chat-header">AI Chat & Image Generator</div>
         
         <div class="chat-messages" id="chatBox">
             <div class="message ai-message">
-                Welcome! <br>
-                1. Side mein Ryu ya Hana ki reference photo upload karein.<br>
-                2. Prompt daalein: <b>/img [scene description]</b><br>
-                <i>Example: /img Ryu sitting in his modern office, realistic shot, 8k</i>
+                Ready! Type <b>/img [your prompt]</b> to generate images.
             </div>
         </div>
 
         <div class="input-container">
-            <input type="text" id="userInput" placeholder="Type /img [scene description]..." onkeypress="handleKeyPress(event)">
+            <input type="text" id="userInput" placeholder="Type /img [prompt]..." onkeypress="handleKeyPress(event)">
             <button onclick="sendMessage()">Generate</button>
         </div>
     </div>
@@ -70,7 +65,7 @@
         let uploadedImageUrl = "";
 
         function previewFile() {
-            const file = document.getElementById('imageUpload').files[0];
+            const file = document.getElementById('imageUpload').files0;
             if (file) {
                 const reader = new FileReader();
                 reader.onloadend = function() {
@@ -94,7 +89,7 @@
             const chatBox = document.getElementById('chatBox');
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
-            msgDiv.innerHTML = isImage ? text : text;
+            msgDiv.innerHTML = text;
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -111,24 +106,22 @@
                 const prompt = text.replace('/img ', '').trim();
                 const loadingDiv = document.createElement('div');
                 loadingDiv.className = 'message ai-message';
-                loadingDiv.innerText = 'Generating drama scene... Please wait ⏳';
+                loadingDiv.innerText = 'Generating image... Please wait ⏳';
                 document.getElementById('chatBox').appendChild(loadingDiv);
 
                 const randomSeed = Math.floor(Math.random() * 100000);
-                const encodedPrompt = encodeURIComponent(prompt + ", ultra realistic, cinematic lighting, photorealistic, 8k");
-                
-                // Image URL with flux model
-                let imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1080&height=1920&seed=${randomSeed}&model=flux`;
+                const encodedPrompt = encodeURIComponent(prompt + ", ultra realistic, cinematic lighting, 8k");
+                const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1080&height=1920&seed=${randomSeed}&model=flux`;
 
                 const img = new Image();
                 img.src = imageUrl;
                 img.onload = () => {
                     loadingDiv.remove();
-                    appendMessage(`<p>🎬 Generated Scene:</p><img src="${imageUrl}" class="ai-image">`, false, true);
+                    appendMessage(`<p>Generated Image:</p><img src="${imageUrl}" class="ai-image">`, false, true);
                 };
                 img.onerror = () => {
                     loadingDiv.remove();
-                    appendMessage('Generation failed. Please try again.', false);
+                    appendMessage('Generation failed. Try again.', false);
                 };
             }
         }
