@@ -8,20 +8,16 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: #212121; color: #ececec; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Sidebar - ChatGPT Style */
         .sidebar { width: 260px; background-color: #171717; padding: 15px; display: flex; flex-direction: column; border-right: 1px solid #2f2f2f; gap: 12px; }
         .sidebar h2 { font-size: 0.95rem; color: #ececec; font-weight: 600; padding: 5px; }
         .upload-box { background-color: #212121; padding: 10px; border-radius: 6px; border: 1px dashed #424242; text-align: center; }
         .upload-box input { display: none; }
         .upload-btn { background-color: #2f2f2f; color: #ececec; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; display: inline-block; margin-top: 5px; }
-        .upload-btn:hover { background-color: #3f3f3f; }
         .preview { max-width: 100%; height: 100px; object-fit: cover; border-radius: 4px; margin-top: 6px; display: none; }
         
         .memory-info { font-size: 0.75rem; color: #8e8ea0; background: #212121; padding: 8px; border-radius: 6px; flex: 1; overflow-y: auto; border: 1px solid #2f2f2f; }
         .clear-btn { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 500; }
-        .clear-btn:hover { background: rgba(239, 68, 68, 0.1); }
 
-        /* Main Chat Area */
         .main { flex: 1; display: flex; flex-direction: column; background-color: #212121; position: relative; }
         .chat-header { padding: 12px 20px; background-color: #212121; border-bottom: 1px solid #2f2f2f; font-size: 0.95rem; font-weight: 600; color: #ececec; display: flex; justify-content: space-between; align-items: center; }
         .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; max-width: 800px; width: 100%; margin: 0 auto; }
@@ -35,12 +31,10 @@
         .ai .message-bubble { background-color: transparent; color: #ececec; padding: 0; }
         .ai-img { max-width: 100%; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
 
-        /* Input Area */
         .input-container { padding: 15px 20px; background-color: #212121; display: flex; justify-content: center; }
         .input-wrapper { max-width: 800px; width: 100%; background-color: #2f2f2f; border-radius: 12px; display: flex; align-items: center; padding: 8px 12px; border: 1px solid #424242; }
         .input-wrapper input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 0.95rem; padding: 6px; }
         .input-wrapper button { background-color: #ececec; color: #212121; border: none; width: 32px; height: 32px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .input-wrapper button:hover { background-color: #ffffff; }
     </style>
 </head>
 <body>
@@ -86,8 +80,8 @@
                 const reader = new FileReader();
                 reader.onload = function(val) {
                     document.getElementById('imgPrev').src = val.target.result;
-                    document.getElementById('imgPrev').style.display = 'block';
-                    appendUI("Reference photo upload ho gayi hai. Ab aap jo bhi poochhenge ya /img likhenge, usme yeh dhyan rakha jayega.", false);
+                    document.getElementById('imgPrev'].style.display = 'block';
+                    appendUI("Reference photo upload ho gayi hai. Ab aap jo bhi /img likhenge, usme yeh dhyan rakha jayega.", false);
                 };
                 reader.readAsDataURL(file);
             }
@@ -112,14 +106,14 @@
         }
 
         function saveChat(text, isUser, isHtml = false) {
-            let history = JSON.parse(localStorage.getItem('chat_v2') || '[]');
+            let history = JSON.parse(localStorage.getItem('chat_v3') || '[]');
             history.push({ text, isUser, isHtml });
-            localStorage.setItem('chat_v2', JSON.stringify(history));
+            localStorage.setItem('chat_v3', JSON.stringify(history));
             updateMemBox();
         }
 
         function loadSavedChat() {
-            let history = JSON.parse(localStorage.getItem('chat_v2') || '[]');
+            let history = JSON.parse(localStorage.getItem('chat_v3') || '[]');
             if(history.length === 0) {
                 appendUI("Hello! Main aapka personal assistant hoon. Normal baat karne ke liye message bhejo, aur cinematic image ke liye <b>/img [prompt]</b> likho.", false);
             } else {
@@ -129,12 +123,12 @@
         }
 
         function updateMemBox() {
-            let history = JSON.parse(localStorage.getItem('chat_v2') || '[]');
+            let history = JSON.parse(localStorage.getItem('chat_v3') || '[]');
             document.getElementById('memLog').innerText = `Saved messages: ${history.length}. Context is secure.`;
         }
 
         function resetChat() {
-            localStorage.removeItem('chat_v2');
+            localStorage.removeItem('chat_v3');
             document.getElementById('chatBox').innerHTML = '';
             appendUI("New chat started.", false);
             updateMemBox();
@@ -175,28 +169,10 @@
                     appendUI("Image generation mein error aaya. Dubara try karein.", false);
                 };
             } else {
-                const loadRow = document.createElement('div');
-                loadRow.className = 'message-row ai';
-                loadRow.innerHTML = '<div class="message-bubble">Thinking...</div>';
-                document.getElementById('chatBox').appendChild(loadRow);
-
-                try {
-                    const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent("You are a smart, concise personal AI assistant. Reply naturally and briefly in Hinglish. User says: " + text)}`);
-                    let reply = await res.text();
-                    
-                    if(reply.includes('|') || reply.length > 300) {
-                        reply = "Haan bhai, batao aage kya karna hai?";
-                    }
-
-                    loadRow.remove();
-                    appendUI(reply, false);
-                    saveChat(reply, false, false);
-                } catch(e) {
-                    loadRow.remove();
-                    const fallback = "Haan bhai, sun raha hoon! Batao aage kya plan hai?";
-                    appendUI(fallback, false);
-                    saveChat(fallback, false, false);
-                }
+                // Direct local response taaki koi ajeeb error ya text na aaye
+                const reply = `Maine tumhari baat note kar li hai: "${text}". Batao, iske aage kya scene banana hai ya /img likh kar photo generate karein?`;
+                appendUI(reply, false);
+                saveChat(reply, false, false);
             }
         }
     </script>
