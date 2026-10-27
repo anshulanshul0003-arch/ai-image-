@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #212121; color: #ececec; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar - Exact ChatGPT Style */
+        .sidebar { width: 260px; background-color: #171717; padding: 12px; display: flex; flex-direction: column; border-right: 1px solid #2f2f2f; gap: 10px; }
+        .new-chat-btn { background: transparent; color: #ececec; border: 1px solid #424242; padding: 10px; border-radius: 8px; cursor: pointer; text-align: left; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .new-chat-btn:hover { background-color: #212121; }
+        
+        .upload-box { background-color: #212121; padding: 10px; border-radius: 8px; border: 1px dashed #424242; text-align: center; }
+        .upload-box input { display: none; }
+        .upload-btn { background-color: #2f2f2f; color: #ececec; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; display: inline-block; margin-top: 5px; }
+        .upload-btn:hover { background-color: #3f3f3f; }
+        .preview { max-width: 100%; height: 90px; object-fit: cover; border-radius: 6px; margin-top: 6px; display: none; }
+        
+        .memory-info { font-size: 0.75rem; color: #8e8ea0; background: #212121; padding: 10px; border-radius: 8px; flex: 1; overflow-y: auto; border: 1px solid #2f2f2f; }
+        .clear-btn { background: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 500; }
+        .clear-btn:hover { background: rgba(239, 68, 68, 0.1); }
+
+        /* Main Chat Area */
+        .main { flex: 1; display: flex; flex-direction: column; background-color: #212121; position: relative; }
+        .chat-header { padding: 12px 20px; background-color: #212121; border-bottom: 1px solid #2f2f2f; font-size: 0.95rem; font-weight: 600; color: #ececec; display: flex; justify-content: space-between; align-items: center; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; max-width: 800px; width: 100%; margin: 0 auto; }
+        
+        .message-row { display: flex; width: 100%; gap: 15px; }
+        .message-row.user { justify-content: flex-end; }
+        .message-row.ai { justify-content: flex-start; }
+        
+        .message-bubble { max-width: 85%; padding: 12px 16px; border-radius: 14px; font-size: 0.95rem; line-height: 1.5; word-wrap: break-word; }
+        .user .message-bubble { background-color: #2f2f2f; color: #ececec; border-top-right-radius: 4px; }
+        .ai .message-bubble { background-color: transparent; color: #ececec; padding: 0; }
+        .ai-img { max-width: 100%; border-radius: 10px; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+
+        /* Input Area - Exact ChatGPT Style Bar */
+        .input-container { padding: 15px 20px 25px 20px; background-color: #212121; display: flex; justify-content: center; }
+        .input-wrapper { max-width: 800px; width: 100%; background-color: #2f2f2f; border-radius: 16px; display: flex; align-items: center; padding: 10px 14px; border: 1px solid #424242; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
+        .input-wrapper input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 0.95rem; padding: 4px; }
+        .input-wrapper input::placeholder { color: #8e8ea0; }
+        .input-wrapper button { background-color: #ececec; color: #212121; border: none; width: 34px; height: 34px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .input-wrapper button:hover { background-color: #ffffff; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <button class="new-chat-btn" onclick="resetChat()">＋ New chat</button>
+        <div class="upload-box">
+            <span style="font-size: 0.75rem; color: #8e8ea0;">Reference Photo</span><br>
+            <label for="fileInput" class="upload-btn">Upload</label>
+            <input type="file" id="fileInput" accept="image/*" onchange="loadImg(event)">
+            <img id="imgPrev" class="preview">
+        </div>
+        
+        <div style="font-size: 0.75rem; color: #ececec; font-weight: 500;">Memory Status:</div>
+        <div class="memory-info" id="memLog">Active context saved.</div>
+        <button class="clear-btn" onclick="resetChat()">Clear Conversations</button>
+    </div>
+
+    <div class="main">
+        <div class="chat-header">
+            <span>ChatGPT</span>
+            <span style="font-size: 0.75rem; color: #10a37f;">● Ready</span>
+        </div>
+        
+        <div class="chat-messages" id="chatBox"></div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <input type="text" id="userInput" placeholder="Message ChatGPT..." onkeypress="if(event.key==='Enter') sendMsg()">
+                <button onclick="sendMsg()">↑</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            loadSavedChat();
+        };
+
+        function loadImg(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(val) {
+                    document.getElementById('imgPrev').src = val.target.result;
+                    document.getElementById('imgPrev').style.display = 'block';
+                    appendUI("Reference photo upload ho gayi hai!", false, false);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function appendUI(content, isUser, isHtml = false) {
+            const box = document.getElementById('chatBox');
+            if(!box) return;
+            const row = document.createElement('div');
+            row.className = `message-row ${isUser ? 'user' : 'ai'}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            if(isHtml) {
+                bubble.innerHTML = content;
+            } else {
+                bubble.innerText = content;
+            }
+            
+            row.appendChild(bubble);
+            box.appendChild(row);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function saveChat(content, isUser, isHtml = false) {
+            let history = JSON.parse(localStorage.getItem('chat_v7') || '[]');
+            history.push({ content, isUser, isHtml });
+            localStorage.setItem('chat_v7', JSON.stringify(history));
+            updateMemBox();
+        }
+
+        function loadSavedChat() {
+            let history = JSON.parse(localStorage.getItem('chat_v7') || '[]');
+            if(history.length === 0) {
+                appendUI("Hello! Main taiyar hoon. Jo image chahiye bas seedha type karo.", false, false);
+            } else {
+                history.forEach(item => appendUI(item.content, item.isUser, item.isHtml));
+            }
+            updateMemBox();
+        }
+
+        function updateMemBox() {
+            let history = JSON.parse(localStorage.getItem('chat_v7') || '[]');
+            const memLog = document.getElementById('memLog');
+            if(memLog) {
+                memLog.innerText = `Saved messages: ${history.length}. Context secure.`;
+            }
+        }
+
+        function resetChat() {
+            localStorage.removeItem('chat_v7');
+            document.getElementById('chatBox').innerHTML = '';
+            appendUI("New chat started.", false, false);
+            updateMemBox();
+        }
+
+        async function sendMsg() {
+            const input = document.getElementById('userInput');
+            if(!input) return;
+            const text = input.value.trim();
+            if(!text) return;
+
+            appendUI(text, true, false);
+            saveChat(text, true, false);
+            input.value = "";
+
+            // Unlimited Instant Image Generation on direct prompt
+            const loadRow = document.createElement('div');
+            loadRow.className = 'message-row ai';
+            loadRow.innerHTML = '<div class="message-bubble" style="color: #8e8ea0;">Generating image...</div>';
+            document.getElementById('chatBox').appendChild(loadRow);
+
+            const seed = Math.floor(Math.random() * 999999);
+            const qualityTags = "hyper-realistic, cinematic soft lighting, 8k resolution, photorealistic masterpiece, dramatic depth of field";
+            const fullPrompt = encodeURIComponent(`${text}, ${qualityTags}`);
+            
+            const imgUrl = `https://pollinations.ai/p/${fullPrompt}?width=1000&height=1500&seed=${seed}&model=flux&nologo=true`;
+
+            const testImg = new Image();
+            testImg.src = imgUrl;
+            testImg.onload = function() {
+                loadRow.remove();
+                const htmlContent = `<img src="${imgUrl}" class="ai-img">`;
+                appendUI(htmlContent, false, true);
+                saveChat(htmlContent, false, true);
+            };
+            testImg.onerror = function() {
+                loadRow.remove();
+                appendUI("Image generation mein error aaya. Dubara try karein.", false, false);
+            };
+        }
+    </script>
+</body>
+</html>
