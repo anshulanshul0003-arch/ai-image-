@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Personal AI - Chat & Image Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #1e1e2f;
+            color: #ffffff;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: #141423;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #2d2d42;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: #6c5ce7;
+        }
+
+        .new-chat-btn {
+            background-color: #6c5ce7;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 20px;
+            transition: 0.3s;
+        }
+
+        .new-chat-btn:hover {
+            background-color: #5a4bcf;
+        }
+
+        /* Main Chat Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background-color: #181828;
+            border-bottom: 1px solid #2d2d42;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            line-height: 1.4;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: #6c5ce7;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+            background-color: #2b2b40;
+            color: #e1e1e1;
+            border-bottom-left-radius: 2px;
+        }
+
+        .ai-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Input Box */
+        .input-container {
+            padding: 20px;
+            background-color: #181828;
+            border-top: 1px solid #2d2d42;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-container input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #3d3d5c;
+            background-color: #252538;
+            color: white;
+            outline: none;
+        }
+
+        .input-container input:focus {
+            border-color: #6c5ce7;
+        }
+
+        .input-container button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: #6c5ce7;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .input-container button:hover {
+            background-color: #5a4bcf;
+        }
+
+        .loading {
+            font-style: italic;
+            color: #a0a0b0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>My AI Studio 🚀</h2>
+        <button class="new-chat-btn" onclick="clearChat()">Clear Chat</button>
+        <p style="font-size: 0.85rem; color: #888;">Type <b>/img [your prompt]</b> to generate unlimited free images!</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="chat-header">ChatGPT & Image Studio</div>
+        
+        <div class="chat-messages" id="chatBox">
+            <div class="message ai-message">
+                Hello! Main aapka AI assistant hoon. <br><br>
+                • Normal baat karne ke liye message type karein.<br>
+                • Image banane ke liye <b>/img</b> likhein. <br><i>Example: /img A handsome CEO in black suit standing in a modern office, 8k cinematic</i>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Type a message or /img prompt..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function appendMessage(text, isUser, isImage = false) {
+            const chatBox = document.getElementById('chatBox');
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message');
+            msgDiv.classList.add(isUser ? 'user-message' : 'ai-message');
+
+            if (isImage) {
+                msgDiv.innerHTML = text;
+            } else {
+                msgDiv.innerText = text;
+            }
+
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            appendMessage(text, true);
+            input.value = '';
+
+            // Check if user wants an image
+            if (text.startsWith('/img ')) {
+                const prompt = text.replace('/img ', '').trim();
+                const loadingMsgDiv = document.createElement('div');
+                loadingMsgDiv.classList.add('message', 'ai-message', 'loading');
+                loadingMsgDiv.innerText = 'Generating your AI image... Please wait... 🎨';
+                document.getElementById('chatBox').appendChild(loadingMsgDiv);
+
+                // Using Pollinations AI Free Unlimited Image Engine
+                const encodedPrompt = encodeURIComponent(prompt);
+                const randomSeed = Math.floor(Math.random() * 100000);
+                const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1080&height=1920&seed=${randomSeed}&model=flux`;
+
+                const img = new Image();
+                img.src = imageUrl;
+                img.onload = () => {
+                    loadingMsgDiv.remove();
+                    appendMessage(`<p>Here is your AI generated image:</p><img src="${imageUrl}" class="ai-image" alt="Generated Image">`, false, true);
+                };
+                img.onerror = () => {
+                    loadingMsgDiv.remove();
+                    appendMessage('Failed to generate image. Please try again.', false);
+                };
+            } else {
+                // Dummy Chatbot Response (Can be integrated with free Hugging Face API / OpenRouter)
+                setTimeout(() => {
+                    appendMessage("Main aapki help kar sakta hoon! Agar aapko image generate karni hai toh `/img [prompt]` ka use karein.", false);
+                }, 500);
+            }
+        }
+
+        function clearChat() {
+            document.getElementById('chatBox').innerHTML = `
+                <div class="message ai-message">
+                    Chat cleared! Type <b>/img [prompt]</b> to generate unlimited images.
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
